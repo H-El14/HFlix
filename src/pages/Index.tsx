@@ -1,11 +1,26 @@
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import ContentRow from '@/components/ContentRow';
-import VideoPlayer from '@/components/VideoPlayer';
 
 const Index = () => {
+  const [uploadedContent, setUploadedContent] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Load uploaded content from localStorage
+    const storedContent = localStorage.getItem('uploadedContent');
+    if (storedContent) {
+      try {
+        const parsedContent = JSON.parse(storedContent);
+        setUploadedContent(parsedContent);
+      } catch (e) {
+        console.error('Error parsing uploaded content:', e);
+      }
+    }
+  }, []);
+  
   // Mock data for content rows
   const trendingNow = [
     { id: 1, title: "Stranger Things", imageUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?&w=300&h=180&fit=crop", year: "2022", rating: "98%", duration: "1h 30m" },
@@ -34,26 +49,23 @@ const Index = () => {
       
       {/* Content Rows */}
       <div className="mt-4">
+        {/* Recently Uploaded Content */}
+        {uploadedContent && uploadedContent.length > 0 && (
+          <ContentRow 
+            title="Recently Added" 
+            movies={uploadedContent}
+          />
+        )}
+      
         <ContentRow 
           title="Trending Now" 
           movies={trendingNow}
         />
+        
         <ContentRow 
           title="Popular on Netflix" 
           movies={popularOnNetflix}
         />
-        
-        {/* Video Preview Section */}
-        <div className="content-container">
-          <h2 className="text-xl md:text-2xl font-bold mb-4 text-netflix-light-gray">Watch Trailer</h2>
-          <div className="max-w-3xl mx-auto">
-            <VideoPlayer 
-              previewImgSrc="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?&auto=format&fit=crop&w=1280" 
-              title="Matrix Trailer"
-              className="aspect-video"
-            />
-          </div>
-        </div>
       </div>
       
       {/* Footer */}

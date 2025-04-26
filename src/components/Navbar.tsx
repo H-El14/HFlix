@@ -1,15 +1,24 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Search, ChevronDown, Upload } from 'lucide-react';
+import { Bell, Search, ChevronDown, Upload, UserCog } from 'lucide-react';
 import MovieUpload from './MovieUpload';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Check if the current profile has admin privileges
+    const checkAdminStatus = () => {
+      const profileData = location.state?.profileName;
+      setIsAdmin(profileData === "Admin");
+    };
+    
+    checkAdminStatus();
+    
     const handleScroll = () => {
       if (window.scrollY > 0) {
         setIsScrolled(true);
@@ -20,7 +29,7 @@ const Navbar = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location]);
 
   return (
     <nav 
@@ -51,6 +60,9 @@ const Navbar = () => {
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">Movies</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">New & Popular</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">My List</Link>
+            {isAdmin && (
+              <Link to="/admin" className="text-netflix-red hover:text-white">Admin Panel</Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -70,6 +82,13 @@ const Navbar = () => {
             <div className="hidden sm:block">
               <MovieUpload />
             </div>
+          )}
+          
+          {/* Admin Icon - only show for admin profiles */}
+          {isAdmin && (
+            <Link to="/admin" className="text-netflix-red">
+              <UserCog size={20} />
+            </Link>
           )}
           
           <button className="text-white">
@@ -102,6 +121,9 @@ const Navbar = () => {
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">Movies</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">New & Popular</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">My List</Link>
+            {isAdmin && (
+              <Link to="/admin" className="text-netflix-red hover:text-white py-1">Admin Panel</Link>
+            )}
             {location.pathname !== '/' && (
               <div className="pt-2">
                 <MovieUpload />

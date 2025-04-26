@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2 } from "lucide-react";
@@ -23,6 +22,7 @@ const initialProfiles = [
   { id: 1, name: "User 1", avatarUrl: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop" },
   { id: 2, name: "User 2", avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop" },
   { id: 3, name: "Kids", avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop" },
+  { id: 4, name: "Admin", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop", isAdmin: true },
 ];
 
 const ProfileSelection = () => {
@@ -84,6 +84,16 @@ const ProfileSelection = () => {
 
   const handleDeleteProfile = () => {
     if (selectedProfile) {
+      if (selectedProfile.name === "Admin") {
+        toast({
+          title: "Cannot Delete Admin",
+          description: "The Admin profile cannot be deleted.",
+          variant: "destructive"
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+      
       setProfiles(profiles.filter(profile => profile.id !== selectedProfile.id));
       setSelectedProfile(null);
       setDeleteDialogOpen(false);
@@ -132,8 +142,7 @@ const ProfileSelection = () => {
   };
 
   const handleProfileClick = (profile: typeof profiles[0]) => {
-    // Navigate to home page with the selected profile
-    navigate('/home', { state: { profileId: profile.id, profileName: profile.name } });
+    navigate('/home', { state: { profileId: profile.id, profileName: profile.name, isAdmin: profile.isAdmin } });
   };
 
   return (
@@ -167,11 +176,12 @@ const ProfileSelection = () => {
                   <button 
                     onClick={() => openDeleteDialog(profile)}
                     className="p-1 text-white bg-red-700 hover:bg-red-600 rounded-full"
+                    disabled={profile.name === "Admin"}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-                <span className="text-gray-400 mt-1 text-center">{profile.name}</span>
+                <span className={`mt-1 text-center ${profile.name === "Admin" ? "text-netflix-red font-semibold" : "text-gray-400"}`}>{profile.name}</span>
               </div>
             ) : (
               <button onClick={() => handleProfileClick(profile)} className="flex flex-col items-center">
@@ -179,7 +189,7 @@ const ProfileSelection = () => {
                   <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />
                   <AvatarFallback className="text-2xl bg-gray-700">{profile.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="text-gray-400 mt-2 text-center">{profile.name}</span>
+                <span className={`mt-2 text-center ${profile.name === "Admin" ? "text-netflix-red font-semibold" : "text-gray-400"}`}>{profile.name}</span>
               </button>
             )}
           </div>
@@ -210,7 +220,6 @@ const ProfileSelection = () => {
         )}
       </div>
 
-      {/* Create Profile Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-netflix-black border-gray-800">
           <DialogHeader>
@@ -238,7 +247,6 @@ const ProfileSelection = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Profile Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-netflix-black border-gray-800">
           <DialogHeader>
@@ -269,7 +277,6 @@ const ProfileSelection = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Avatar Selection Dialog */}
       <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
         <DialogContent className="bg-netflix-black border-gray-800">
           <DialogHeader>
@@ -289,7 +296,6 @@ const ProfileSelection = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Profile Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-netflix-black border-gray-800 text-white">
           <AlertDialogHeader>
