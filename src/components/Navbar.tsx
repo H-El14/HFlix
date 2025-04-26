@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, Search, ChevronDown } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Bell, Search, ChevronDown, Upload } from 'lucide-react';
+import MovieUpload from './MovieUpload';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,7 +31,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between py-2 px-4 md:px-16">
         <div className="flex items-center">
           {/* Netflix Logo */}
-          <Link to="/" className="mr-8">
+          <Link to="/home" className="mr-8">
             <svg 
               viewBox="0 0 111 30" 
               className="h-6 md:h-7 w-auto fill-netflix-red"
@@ -44,7 +46,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex space-x-4">
-            <Link to="/" className="text-netflix-light-gray hover:text-white">Home</Link>
+            <Link to="/home" className="text-netflix-light-gray hover:text-white">Home</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">TV Shows</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">Movies</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white">New & Popular</Link>
@@ -63,19 +65,29 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Upload Button - only show on non-profile selection page */}
+          {location.pathname !== '/' && (
+            <div className="hidden sm:block">
+              <MovieUpload />
+            </div>
+          )}
+          
           <button className="text-white">
             <Search size={20} />
           </button>
           <button className="text-white">
             <Bell size={20} />
           </button>
+          
           {/* Profile */}
           <div className="flex items-center">
-            <img 
-              src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?&w=48&h=48&auto=format&fit=crop&crop=face" 
-              alt="Profile" 
-              className="rounded-md h-8 w-8"
-            />
+            <Link to="/">
+              <img 
+                src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?&w=48&h=48&auto=format&fit=crop&crop=face" 
+                alt="Profile" 
+                className="rounded-md h-8 w-8"
+              />
+            </Link>
             <ChevronDown className="ml-1 text-white" size={16} />
           </div>
         </div>
@@ -85,11 +97,16 @@ const Navbar = () => {
       {showMobileMenu && (
         <div className="md:hidden bg-netflix-black/95 py-4 px-4 absolute w-full">
           <div className="flex flex-col space-y-3">
-            <Link to="/" className="text-netflix-light-gray hover:text-white py-1">Home</Link>
+            <Link to="/home" className="text-netflix-light-gray hover:text-white py-1">Home</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">TV Shows</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">Movies</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">New & Popular</Link>
             <Link to="/browse" className="text-netflix-light-gray hover:text-white py-1">My List</Link>
+            {location.pathname !== '/' && (
+              <div className="pt-2">
+                <MovieUpload />
+              </div>
+            )}
           </div>
         </div>
       )}

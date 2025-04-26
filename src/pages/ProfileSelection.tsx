@@ -1,12 +1,22 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus, Edit } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Sample profile data (would come from Supabase in a real implementation)
 const initialProfiles = [
@@ -17,12 +27,23 @@ const initialProfiles = [
 
 const ProfileSelection = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState(initialProfiles);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<null | typeof profiles[0]>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarOptions] = useState([
+    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop",
+    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop",
+    "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+  ]);
   
   const handleCreateProfile = () => {
     if (newProfileName.trim()) {
@@ -47,7 +68,7 @@ const ProfileSelection = () => {
     if (selectedProfile && newProfileName.trim()) {
       setProfiles(profiles.map(profile => 
         profile.id === selectedProfile.id 
-          ? { ...profile, name: newProfileName }
+          ? { ...profile, name: newProfileName, avatarUrl: selectedProfile.avatarUrl }
           : profile
       ));
       setSelectedProfile(null);
@@ -57,6 +78,19 @@ const ProfileSelection = () => {
       toast({
         title: "Profile Updated",
         description: `Profile has been updated successfully.`
+      });
+    }
+  };
+
+  const handleDeleteProfile = () => {
+    if (selectedProfile) {
+      setProfiles(profiles.filter(profile => profile.id !== selectedProfile.id));
+      setSelectedProfile(null);
+      setDeleteDialogOpen(false);
+      
+      toast({
+        title: "Profile Deleted",
+        description: `Profile has been deleted.`
       });
     }
   };
@@ -71,6 +105,37 @@ const ProfileSelection = () => {
     setIsEditOpen(true);
   };
 
+  const openAvatarDialog = (profile: typeof profiles[0]) => {
+    setSelectedProfile(profile);
+    setAvatarDialogOpen(true);
+  };
+
+  const openDeleteDialog = (profile: typeof profiles[0]) => {
+    setSelectedProfile(profile);
+    setDeleteDialogOpen(true);
+  };
+
+  const updateAvatar = (avatarUrl: string) => {
+    if (selectedProfile) {
+      setProfiles(profiles.map(profile => 
+        profile.id === selectedProfile.id 
+          ? { ...profile, avatarUrl }
+          : profile
+      ));
+      setAvatarDialogOpen(false);
+      
+      toast({
+        title: "Avatar Updated",
+        description: "Profile avatar has been updated."
+      });
+    }
+  };
+
+  const handleProfileClick = (profile: typeof profiles[0]) => {
+    // Navigate to home page with the selected profile
+    navigate('/home', { state: { profileId: profile.id, profileName: profile.name } });
+  };
+
   return (
     <div className="min-h-screen bg-netflix-black flex flex-col items-center justify-center p-4">
       <h1 className="text-2xl md:text-4xl font-bold mb-10 text-white">Who's watching?</h1>
@@ -79,27 +144,44 @@ const ProfileSelection = () => {
         {profiles.map((profile) => (
           <div key={profile.id} className="flex flex-col items-center">
             {isEditing ? (
-              <button
-                onClick={() => openEditDialog(profile)}
-                className="group relative cursor-pointer transition-all"
-              >
-                <Avatar className="h-[100px] w-[100px] border-2 border-transparent group-hover:border-white overflow-hidden">
-                  <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />
-                  <AvatarFallback className="text-2xl bg-gray-700">{profile.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center">
-                  <Edit className="w-10 h-10 text-white" />
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => openAvatarDialog(profile)}
+                  className="group relative cursor-pointer transition-all"
+                >
+                  <Avatar className="h-[100px] w-[100px] border-2 border-transparent group-hover:border-white overflow-hidden">
+                    <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />
+                    <AvatarFallback className="text-2xl bg-gray-700">{profile.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                    <Edit className="w-10 h-10 text-white" />
+                  </div>
+                </button>
+                <div className="flex flex-row gap-2">
+                  <button 
+                    onClick={() => openEditDialog(profile)}
+                    className="p-1 text-white bg-gray-700 hover:bg-gray-600 rounded-full"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => openDeleteDialog(profile)}
+                    className="p-1 text-white bg-red-700 hover:bg-red-600 rounded-full"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-              </button>
+                <span className="text-gray-400 mt-1 text-center">{profile.name}</span>
+              </div>
             ) : (
-              <Link to="/">
+              <button onClick={() => handleProfileClick(profile)} className="flex flex-col items-center">
                 <Avatar className="h-[100px] w-[100px] border-2 border-transparent hover:border-white cursor-pointer">
                   <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />
                   <AvatarFallback className="text-2xl bg-gray-700">{profile.name[0]}</AvatarFallback>
                 </Avatar>
-              </Link>
+                <span className="text-gray-400 mt-2 text-center">{profile.name}</span>
+              </button>
             )}
-            <span className="text-gray-400 mt-2 text-center">{profile.name}</span>
           </div>
         ))}
         
@@ -186,6 +268,42 @@ const ProfileSelection = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Avatar Selection Dialog */}
+      <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+        <DialogContent className="bg-netflix-black border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-white">Choose Profile Avatar</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-4 py-4">
+            {avatarOptions.map((avatar, index) => (
+              <button 
+                key={index}
+                onClick={() => updateAvatar(avatar)}
+                className="rounded-md overflow-hidden border-2 border-transparent hover:border-white"
+              >
+                <img src={avatar} alt={`Avatar option ${index + 1}`} className="w-full aspect-square object-cover" />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Profile Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-netflix-black border-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Delete Profile?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to delete this profile? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-gray-700 text-gray-300 bg-transparent">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteProfile} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
